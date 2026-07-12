@@ -43,7 +43,9 @@ class CarControllerParams:
     self.ACCEL_MIN = -3.5  # m/s2
 
     if CP.lateralTuning.which() == 'torque':
-      self.STEER_DELTA_UP = 20       # 0.75s time to peak torque (raised from 15/1.0s for a snappier correction)
+      # matches panda's hardcoded max_rate_up=15 in opendbc/safety/modes/toyota.h - raising this
+      # in Python alone is a no-op since panda independently caps the actual CAN-level torque ramp
+      self.STEER_DELTA_UP = 15       # 1.0s time to peak torque
       self.STEER_DELTA_DOWN = 25     # always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
     else:
       self.STEER_DELTA_UP = 10       # 1.5s time to peak torque
