@@ -119,6 +119,9 @@ class CarInterface(CarInterfaceBase):
     if candidate in TSS2_CAR:
       ret.flags |= ToyotaFlags.RAISED_ACCEL_LIMIT.value
 
+    # TSS2 hybrids get a smoother stop/start tune; TSS-P hybrids (e.g. Prius, Prius Prime) share the same
+    # quick-responding hybrid powertrain and benefit from the same tune, so extend it to CAR.TOYOTA_PRIUS too
+    if candidate in TSS2_CAR or candidate == CAR.TOYOTA_PRIUS:
       ret.vEgoStopping = 0.25
       ret.vEgoStarting = 0.25
       ret.stoppingDecelRate = 0.3  # reach stopping target smoothly
