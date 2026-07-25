@@ -180,7 +180,7 @@ class CarController(CarControllerBase, GasInterceptorCarController):
         self.standstill_req = True
       if CS.pcm_acc_status != 8 or actuators.longControlState != LongCtrlState.stopping:
         # pcm entered standstill or it's disabled, or our own planner has already decided to move
-        # (don't wait on the pcm's stop-timer status once we want to go, e.g. lead pulling away)
+        # (don't wait on the pcm's stop-timer status once we want to go, e.g. lead pulling away) JPH TEST
         self.standstill_req = False
 
     else:
