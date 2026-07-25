@@ -178,8 +178,9 @@ class CarController(CarControllerBase, GasInterceptorCarController):
     if self.CP.carFingerprint not in NO_STOP_TIMER_CAR or self.CP_SP.enableGasInterceptor:
       if CS.out.standstill and not self.last_standstill and (self.CP_SP.enableGasInterceptor or not self.CP_SP.flags & ToyotaFlagsSP.STOP_AND_GO_HACK):
         self.standstill_req = True
-      if CS.pcm_acc_status != 8:
-        # pcm entered standstill or it's disabled
+      if CS.pcm_acc_status != 8 or actuators.longControlState != LongCtrlState.stopping:
+        # pcm entered standstill or it's disabled, or our own planner has already decided to move
+        # (don't wait on the pcm's stop-timer status once we want to go, e.g. lead pulling away)
         self.standstill_req = False
 
     else:
