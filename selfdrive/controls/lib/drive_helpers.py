@@ -10,9 +10,11 @@ MAX_CURVATURE = 0.2
 MAX_VEL_ERR = 5.0  # m/s
 MIN_STABLE_DELAY = 0.3
 
-# EU guidelines (raised above stock 5.0/3.0 for more assertive lane centering/lane changes)
-MAX_LATERAL_JERK = 6.0  # m/s^3
-MAX_LATERAL_ACCEL_NO_ROLL = 3.5  # m/s^2
+# EU guidelines (raised above stock 5.0/3.0; bumped again from 6.0/3.5 to test sharper turn-taking.
+# note: actual torque ramp rate is separately capped at panda's hard STEER_DELTA_UP=15 ceiling,
+# so this only affects how sharp/fast a curve we're willing to ask for, not how fast the motor can respond)
+MAX_LATERAL_JERK = 7.0  # m/s^3
+MAX_LATERAL_ACCEL_NO_ROLL = 4.0  # m/s^2
 
 
 def clamp(val, min_val, max_val):

@@ -60,19 +60,21 @@ CRUISE_MAX_ACCEL = 1.6
 MIN_X_LEAD_FACTOR = 0.5
 
 def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
+  # pedal smoothness now decoupled from follow distance: same jerk factor floor (1.6) across
+  # all personalities, relaxed/standard kept at the gentler 1.8
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.8
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.6
+    return 1.8
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 0.5
+    return 1.6
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
-    return 1.25  # closest gap (same as aggressive), paired with relaxed's gentle jerk factor
+    return 1.75
   elif personality==log.LongitudinalPersonality.standard:
     return 1.45
   elif personality==log.LongitudinalPersonality.aggressive:
