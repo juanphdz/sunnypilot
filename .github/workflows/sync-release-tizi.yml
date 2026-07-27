@@ -1,0 +1,37 @@
+name: Sync release-tizi and jphxprius from upstream
+
+on:
+  schedule:
+    - cron: '0 13 * * *'  # daily, 13:00 UTC (~6am Pacific)
+  workflow_dispatch:  # allows manual trigger from github.com or the GitHub mobile app
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/sunnypilot/sunnypilot.git
+          git fetch upstream release-tizi
+          git fetch origin release-tizi jphxprius
+
+      - name: Fast-forward release-tizi from upstream
+        run: |
+          git checkout release-tizi
+          git merge --ff-only upstream/release-tizi
+          git push origin release-tizi
+
+      - name: Merge into jphxprius
+        run: |
+          git checkout jphxprius
+          git merge release-tizi -m "Merge release-tizi into jphxprius (auto-sync)"
+          git push origin jphxprius
