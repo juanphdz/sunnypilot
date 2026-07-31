@@ -26,12 +26,12 @@ jobs:
 
       - name: Fast-forward release-tizi from upstream
         run: |
-          git checkout release-tizi
+          git checkout -B release-tizi origin/release-tizi
           git merge --ff-only upstream/release-tizi
           git push origin release-tizi
 
       - name: Merge into jphxprius
         run: |
-          git checkout jphxprius
+          git checkout -B jphxprius origin/jphxprius
           git merge release-tizi -m "Merge release-tizi into jphxprius (auto-sync)"
           git push origin jphxprius
