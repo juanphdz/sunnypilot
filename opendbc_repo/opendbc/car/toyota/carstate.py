@@ -170,8 +170,11 @@ class CarState(CarStateBase, CarStateExt):
         ret.accFaulted = ret.accFaulted or cp.vl["PCM_CRUISE_2"]["LOW_SPEED_LOCKOUT"] == 2
 
     self.pcm_acc_status = cp.vl["PCM_CRUISE"]["CRUISE_STATE"]
-    if self.CP.carFingerprint not in (NO_STOP_TIMER_CAR - TSS2_CAR):
-      # ignore standstill state in certain vehicles, since pcm allows to restart with just an acceleration request
+    if self.CP.carFingerprint not in (NO_STOP_TIMER_CAR - TSS2_CAR) and not self.CP_SP.flags & ToyotaFlagsSP.STOP_AND_GO_HACK:
+      # ignore standstill state in certain vehicles, since pcm allows to restart with just an acceleration request.
+      # also ignored once the stop-and-go hack is on: on "stop timer" cars (this one included) CRUISE_STATE==7 can
+      # stay stuck asserted across a rapid second stop, which fires Toyota's "Press Resume to Exit Standstill"
+      # alert (car_specific.py) and blocks auto-resume - exactly what the hack is meant to prevent
       ret.cruiseState.standstill = self.pcm_acc_status == 7
     ret.cruiseState.enabled = bool(cp.vl["PCM_CRUISE"]["CRUISE_ACTIVE"])
     ret.cruiseState.nonAdaptive = self.pcm_acc_status in (1, 2, 3, 4, 5, 6)

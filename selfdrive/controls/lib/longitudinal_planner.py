@@ -170,7 +170,9 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
       self.output_should_stop = output_should_stop_mpc
 
     for idx in range(2):
-      accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.05, self.prev_accel_clip[idx] + 0.05)
+      # raised from 0.05 (1.0 m/s^2/s @ 20Hz) - was silently bottlenecking the snappy-launch ceiling
+      # in A_CRUISE_MAX_VALS; 0.15 (3.0 m/s^2/s) lets the ceiling itself rise fast enough to matter
+      accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.15, self.prev_accel_clip[idx] + 0.15)
     self.output_a_target = np.clip(output_a_target, accel_clip[0], accel_clip[1])
     self.prev_accel_clip = accel_clip
 
