@@ -21,7 +21,9 @@ A_CRUISE_MAX_VALS = [1.5, 0.9, 0.9, 0.7, 0.5]  # snappy right at a stop (1.5 = c
 A_CRUISE_MAX_BP = [0., 3.0, 10.0, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.4
-MIN_ALLOW_THROTTLE_SPEED = 2.5
+# raised from 2.5 - throttle_prob isn't reliable through a full launch either, not just at creep speed,
+# and was clamping accel toward coast (~-0.3 m/s^2) for as long as the model stayed unsure, well past 30mph
+MIN_ALLOW_THROTTLE_SPEED = 10.0
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
