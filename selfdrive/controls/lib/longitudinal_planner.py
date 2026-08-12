@@ -17,8 +17,8 @@ from openpilot.common.swaglog import cloudlog
 
 from openpilot.sunnypilot.selfdrive.controls.lib.longitudinal_planner import LongitudinalPlannerSP
 
-A_CRUISE_MAX_VALS = [1.5, 0.9, 0.9, 0.7, 0.5]  # snappy right at a stop (1.5 = car's hard ACCEL_MAX ceiling), rolls off fast to the gentler pace by 3 m/s
-A_CRUISE_MAX_BP = [0., 3.0, 10.0, 25., 40.]
+A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]  # snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch, rolls off gently after ~20mph
+A_CRUISE_MAX_BP = [0., 8.94, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging too easily/too long past MIN_ALLOW_THROTTLE_SPEED
 # raised from 2.5 - throttle_prob isn't reliable through a full launch either, not just at creep speed,
