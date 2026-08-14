@@ -17,8 +17,8 @@ from openpilot.common.swaglog import cloudlog
 
 from openpilot.sunnypilot.selfdrive.controls.lib.longitudinal_planner import LongitudinalPlannerSP
 
-A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]  # snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch, rolls off gently after ~20mph
-A_CRUISE_MAX_BP = [0., 8.94, 25., 40.]
+A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]  # snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch, rolls off gently after ~35mph
+A_CRUISE_MAX_BP = [0., 15.65, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging too easily/too long past MIN_ALLOW_THROTTLE_SPEED
 # raised from 2.5 - throttle_prob isn't reliable through a full launch either, not just at creep speed,
@@ -173,8 +173,9 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
 
     for idx in range(2):
       # raised from 0.05 (1.0 m/s^2/s @ 20Hz) - was silently bottlenecking the snappy-launch ceiling
-      # in A_CRUISE_MAX_VALS; 0.15 (3.0 m/s^2/s) lets the ceiling itself rise fast enough to matter
-      accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.15, self.prev_accel_clip[idx] + 0.15)
+      # in A_CRUISE_MAX_VALS. 0.15 (3.0 m/s^2/s) still left a brief hesitation in the first 0-3mph
+      # while the ceiling ramped up to 1.5; 0.25 (5.0 m/s^2/s) closes that gap
+      accel_clip[idx] = np.clip(accel_clip[idx], self.prev_accel_clip[idx] - 0.25, self.prev_accel_clip[idx] + 0.25)
     self.output_a_target = np.clip(output_a_target, accel_clip[0], accel_clip[1])
     self.prev_accel_clip = accel_clip
 

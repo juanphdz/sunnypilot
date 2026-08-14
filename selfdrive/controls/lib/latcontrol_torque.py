@@ -26,7 +26,9 @@ KP = 0.8
 KI = 0.15
 
 INTERP_SPEEDS = [1, 1.5, 2.0, 3.0, 5, 7.5, 10, 15, 30]
-KP_INTERP = [250, 120, 65, 30, 11.5, 5.5, 3.5, 2.0, KP]
+# lowered the 15 m/s (33.6mph) point from 2.0 to 1.4 - experiment for lateral ping-ponging reported
+# specifically starting around there; oscillation points at gain being too aggressive, not too soft
+KP_INTERP = [250, 120, 65, 30, 11.5, 5.5, 3.5, 1.4, KP]
 
 LP_FILTER_CUTOFF_HZ = 1.2
 JERK_LOOKAHEAD_SECONDS = 0.19
