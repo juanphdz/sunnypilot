@@ -22,17 +22,25 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/sunnypilot/sunnypilot.git
-          git fetch upstream release-tizi
+          # force: sunnypilot rebuilds/squashes release-tizi periodically, so it's not always a
+          # fast-forward - treat it as a disposable mirror, not a normal incrementally-committed branch
+          git fetch upstream +release-tizi:refs/remotes/upstream/release-tizi
           git fetch origin release-tizi jphxprius
 
-      - name: Fast-forward release-tizi from upstream
+      - name: Reset release-tizi to match upstream
         id: sync_release_tizi
         run: |
-          git checkout -B release-tizi origin/release-tizi
-          before=$(git rev-parse HEAD)
-          git merge --ff-only upstream/release-tizi
-          after=$(git rev-parse HEAD)
-          git push origin release-tizi
+          before=$(git rev-parse origin/release-tizi)
+          after=$(git rev-parse upstream/release-tizi)
+
+          # capture where jphxprius currently diverges from release-tizi BEFORE moving release-tizi,
+          # so we know exactly which commits are "mine" to replay, regardless of how release-tizi changed
+          old_base=$(git merge-base origin/jphxprius origin/release-tizi)
+          echo "old_base=$old_base" >> "$GITHUB_OUTPUT"
+
+          git checkout -B release-tizi upstream/release-tizi
+          git push origin release-tizi --force
+
           if [ "$before" != "$after" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "before=$before" >> "$GITHUB_OUTPUT"
@@ -41,18 +49,27 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Merge into jphxprius
+      - name: Rebase jphxprius onto the fresh release-tizi
         run: |
+          # rebase (not merge) - a merge fails outright if release-tizi's history was rewritten,
+          # and would silently produce a messy merge commit even when it wasn't
           git checkout -B jphxprius origin/jphxprius
-          git merge release-tizi -m "Merge release-tizi into jphxprius (auto-sync)"
-          git push origin jphxprius
+          git rebase --onto release-tizi "${{ steps.sync_release_tizi.outputs.old_base }}" jphxprius
+          git push origin jphxprius --force
 
       - name: Open notification issue on new upstream changes
         if: steps.sync_release_tizi.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          log=$(git log --oneline "${{ steps.sync_release_tizi.outputs.before }}..${{ steps.sync_release_tizi.outputs.after }}")
+          before="${{ steps.sync_release_tizi.outputs.before }}"
+          after="${{ steps.sync_release_tizi.outputs.after }}"
+          if git merge-base "$before" "$after" > /dev/null 2>&1; then
+            log=$(git log --oneline "$before..$after")
+            body=$(printf 'New commits pulled from upstream release-tizi and rebased into jphxprius:\n\n```\n%s\n```' "$log")
+          else
+            body=$(printf 'upstream release-tizi was rebuilt from a new, unrelated base (this is normal for sunnypilot release branches).\n\nPrevious: `%s`\nNew: `%s`\n\njphxprius commits were rebased onto the new base cleanly.' "$before" "$after")
+          fi
           gh issue create --repo "${{ github.repository }}" \
             --title "release-tizi synced: new upstream changes ($(date -u +%Y-%m-%d))" \
-            --body "$(printf 'New commits pulled from upstream release-tizi and merged into jphxprius:\n\n```\n%s\n```' "$log")"
+            --body "$body"
