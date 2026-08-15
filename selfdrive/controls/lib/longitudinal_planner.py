@@ -6,7 +6,7 @@ import cereal.messaging as messaging
 from opendbc.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.common.constants import CV
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.common.params import Params
+from openpilot.common.params import Params, UnknownKeyName
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.modeld.constants import ModelConstants
 from openpilot.selfdrive.controls.lib.longcontrol import LongCtrlState
@@ -86,13 +86,21 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
 
   def _read_e2e_bias_param(self):
     # live-adjustable without a redeploy: echo a float into /data/params/d/E2ESpeedBias on-device,
-    # e.g. `echo 0.13 > /data/params/d/E2ESpeedBias`, takes effect within PARAMS_UPDATE_PERIOD seconds
-    self._e2e_bias = float(self.params.get("E2ESpeedBias", return_default=True))
+    # e.g. `echo 0.13 > /data/params/d/E2ESpeedBias`, takes effect within PARAMS_UPDATE_PERIOD seconds.
+    # defensive: a params-schema mismatch (e.g. device hasn't rebuilt against the new params_keys.h
+    # yet) must never be able to crash planning - fall back to the known-good value instead.
+    try:
+      self._e2e_bias = float(self.params.get("E2ESpeedBias", return_default=True))
+    except (UnknownKeyName, TypeError, ValueError):
+      self._e2e_bias = 0.13
 
   def _read_snappy_launch_param(self):
     # speed (mph) up to which the full A_CRUISE_MAX_VALS[0] launch ceiling is sustained before
     # rolling off - this is the exact breakpoint we kept hand-adjusting (6.7 -> 17 -> 20 -> 35mph)
-    mph = float(self.params.get("SnappyLaunchMaxSpeed", return_default=True))
+    try:
+      mph = float(self.params.get("SnappyLaunchMaxSpeed", return_default=True))
+    except (UnknownKeyName, TypeError, ValueError):
+      mph = 35.0
     self._a_cruise_max_bp = [0., mph * CV.MPH_TO_MS, 25., 40.]
 
   @staticmethod
