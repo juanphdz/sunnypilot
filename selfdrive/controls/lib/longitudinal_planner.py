@@ -38,8 +38,8 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 _A_TOTAL_MAX_V = [1.7, 3.2]
 _A_TOTAL_MAX_BP = [20., 40.]
 
-def get_max_accel(v_ego):
-  return np.interp(v_ego, A_CRUISE_MAX_BP, A_CRUISE_MAX_VALS)
+def get_max_accel(v_ego, bp=A_CRUISE_MAX_BP):
+  return np.interp(v_ego, bp, A_CRUISE_MAX_VALS)
 
 def get_coast_accel(pitch):
   return np.sin(pitch) * -5.65 - 0.3  # fitted from data using xx/projects/allow_throttle/compute_coast_accel.py
@@ -71,6 +71,8 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     self._param_frame = 0
     self._e2e_bias = 0.0
     self._read_e2e_bias_param()
+    self._a_cruise_max_bp = list(A_CRUISE_MAX_BP)
+    self._read_snappy_launch_param()
 
     self.a_desired = init_a
     self.v_desired_filter = FirstOrderFilter(init_v, 2.0, self.dt)
@@ -86,6 +88,12 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     # live-adjustable without a redeploy: echo a float into /data/params/d/E2ESpeedBias on-device,
     # e.g. `echo 0.13 > /data/params/d/E2ESpeedBias`, takes effect within PARAMS_UPDATE_PERIOD seconds
     self._e2e_bias = float(self.params.get("E2ESpeedBias", return_default=True))
+
+  def _read_snappy_launch_param(self):
+    # speed (mph) up to which the full A_CRUISE_MAX_VALS[0] launch ceiling is sustained before
+    # rolling off - this is the exact breakpoint we kept hand-adjusting (6.7 -> 17 -> 20 -> 35mph)
+    mph = float(self.params.get("SnappyLaunchMaxSpeed", return_default=True))
+    self._a_cruise_max_bp = [0., mph * CV.MPH_TO_MS, 25., 40.]
 
   @staticmethod
   def parse_model(model_msg):
@@ -112,6 +120,7 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
 
     if self._param_frame % int(PARAMS_UPDATE_PERIOD / self.dt) == 0:
       self._read_e2e_bias_param()
+      self._read_snappy_launch_param()
     self._param_frame += 1
 
     if len(sm['carControl'].orientationNED) == 3:
@@ -135,7 +144,7 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     # No change cost when user is controlling the speed, or when standstill
     prev_accel_constraint = not (reset_state or sm['carState'].standstill)
 
-    accel_clip = [ACCEL_MIN, get_max_accel(v_ego)]
+    accel_clip = [ACCEL_MIN, get_max_accel(v_ego, self._a_cruise_max_bp)]
     steer_angle_without_offset = sm['carState'].steeringAngleDeg - sm['liveParameters'].angleOffsetDeg
     accel_clip = limit_accel_in_turns(v_ego, steer_angle_without_offset, accel_clip, self.CP)
 

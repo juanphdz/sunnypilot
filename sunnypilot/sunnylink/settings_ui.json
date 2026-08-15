@@ -623,6 +623,24 @@
               ]
             },
             {
+              "key": "SnappyLaunchMaxSpeed",
+              "widget": "option",
+              "title": "Snappy Launch Max Speed",
+              "description": "Speed up to which the full acceleration ceiling is held before easing into the gentler cruising pace. Applies to any launch/acceleration, not just End-to-End mode.",
+              "details": "The planner's acceleration ceiling starts at its highest value (the car's hardware max) right from a stop, then rolls off to a gentler pace above this speed. Raising this value keeps the punchy launch feel for longer before it eases off; lowering it settles into the gentler pace sooner.",
+              "min": 0,
+              "max": 45,
+              "step": 1,
+              "unit": "mph",
+              "enablement": [
+                {
+                  "type": "capability",
+                  "field": "has_longitudinal_control",
+                  "equals": true
+                }
+              ]
+            },
+            {
               "key": "DisengageOnAccelerator",
               "widget": "toggle",
               "title": "Disengage Cruise on Accelerator Pedal",
