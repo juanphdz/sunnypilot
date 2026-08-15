@@ -24,6 +24,26 @@ sections:
     - $ref: '#/macros/longitudinal'
     enablement:
     - $ref: '#/macros/longitudinal'
+  - key: E2ESpeedBias
+    widget: option
+    title: E2E Speed Bias
+    description: Nudges the model's own requested acceleration up when it's coasting/cruising conservatively
+      in full End-to-End mode. Never applies while the model is braking or intends to stop - the MPC's own
+      braking assessment always overrides this.
+    min: 0.0
+    max: 0.3
+    step: 0.01
+    unit: m/s^2
+    visibility:
+    - $ref: '#/macros/longitudinal'
+    - type: param
+      key: ExperimentalMode
+      equals: true
+    enablement:
+    - $ref: '#/macros/longitudinal'
+    - type: param
+      key: ExperimentalMode
+      equals: true
   - key: DisengageOnAccelerator
     widget: toggle
     title: Disengage Cruise on Accelerator Pedal
