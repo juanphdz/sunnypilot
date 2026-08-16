@@ -6,7 +6,6 @@ import cereal.messaging as messaging
 from opendbc.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.common.constants import CV
 from openpilot.common.filter_simple import FirstOrderFilter
-from openpilot.common.params import Params, UnknownKeyName
 from openpilot.common.realtime import DT_MDL
 from openpilot.selfdrive.modeld.constants import ModelConstants
 from openpilot.selfdrive.controls.lib.longcontrol import LongCtrlState
@@ -15,11 +14,14 @@ from openpilot.selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import T_IDX
 from openpilot.selfdrive.controls.lib.drive_helpers import CONTROL_N, get_accel_from_plan
 from openpilot.selfdrive.car.cruise import V_CRUISE_MAX, V_CRUISE_UNSET
 from openpilot.common.swaglog import cloudlog
-from openpilot.sunnypilot import PARAMS_UPDATE_PERIOD
 
 from openpilot.sunnypilot.selfdrive.controls.lib.longitudinal_planner import LongitudinalPlannerSP
 
-A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]  # snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch, rolls off gently after ~35mph
+# snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch up to ~35mph (15.65 m/s),
+# rolls off gently after that. plain constants - this device runs prebuilt with no local build system, so
+# a Params-based live-tune here isn't viable: params_keys.h is a compiled C++ header (common/params.cc),
+# and a stale/unrebuilt schema throws UnknownKeyName. learned this the hard way - it crashed plannerd.
+A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]
 A_CRUISE_MAX_BP = [0., 15.65, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging too easily/too long past MIN_ALLOW_THROTTLE_SPEED
@@ -29,17 +31,17 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 
 # nudges the e2e model's own desiredAcceleration up when it's coasting/cruising conservatively -
 # never when it's trying to brake or stop. bias_scale fades to 0 once the model's raw request drops
-# below -2*bias (it's clearly braking), and the final min(e2e, mpc) below still lets MPC's own
-# braking assessment override this unconditionally either way. idea + field-tested default value
-# (0.13, one week of driving) from a community fork post; only applies while is_e2e(sm) is true.
-# live-adjustable via the "E2ESpeedBias" param - see _read_e2e_bias_param()
+# below -2*E2E_SPEED_BIAS (it's clearly braking), and the final min(e2e, mpc) below still lets MPC's
+# own braking assessment override this unconditionally either way. idea + field-tested value (0.13,
+# one week of driving) from a community fork post; only applies while is_e2e(sm) is true.
+E2E_SPEED_BIAS = 0.13  # m/s^2
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
 _A_TOTAL_MAX_BP = [20., 40.]
 
-def get_max_accel(v_ego, bp=A_CRUISE_MAX_BP):
-  return np.interp(v_ego, bp, A_CRUISE_MAX_VALS)
+def get_max_accel(v_ego):
+  return np.interp(v_ego, A_CRUISE_MAX_BP, A_CRUISE_MAX_VALS)
 
 def get_coast_accel(pitch):
   return np.sin(pitch) * -5.65 - 0.3  # fitted from data using xx/projects/allow_throttle/compute_coast_accel.py
@@ -67,13 +69,6 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     self.dt = dt
     self.allow_throttle = True
 
-    self.params = Params()
-    self._param_frame = 0
-    self._e2e_bias = 0.0
-    self._read_e2e_bias_param()
-    self._a_cruise_max_bp = list(A_CRUISE_MAX_BP)
-    self._read_snappy_launch_param()
-
     self.a_desired = init_a
     self.v_desired_filter = FirstOrderFilter(init_v, 2.0, self.dt)
     self.prev_accel_clip = [ACCEL_MIN, ACCEL_MAX]
@@ -83,25 +78,6 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     self.v_desired_trajectory = np.zeros(CONTROL_N)
     self.a_desired_trajectory = np.zeros(CONTROL_N)
     self.j_desired_trajectory = np.zeros(CONTROL_N)
-
-  def _read_e2e_bias_param(self):
-    # live-adjustable without a redeploy: echo a float into /data/params/d/E2ESpeedBias on-device,
-    # e.g. `echo 0.13 > /data/params/d/E2ESpeedBias`, takes effect within PARAMS_UPDATE_PERIOD seconds.
-    # defensive: a params-schema mismatch (e.g. device hasn't rebuilt against the new params_keys.h
-    # yet) must never be able to crash planning - fall back to the known-good value instead.
-    try:
-      self._e2e_bias = float(self.params.get("E2ESpeedBias", return_default=True))
-    except (UnknownKeyName, TypeError, ValueError):
-      self._e2e_bias = 0.13
-
-  def _read_snappy_launch_param(self):
-    # speed (mph) up to which the full A_CRUISE_MAX_VALS[0] launch ceiling is sustained before
-    # rolling off - this is the exact breakpoint we kept hand-adjusting (6.7 -> 17 -> 20 -> 35mph)
-    try:
-      mph = float(self.params.get("SnappyLaunchMaxSpeed", return_default=True))
-    except (UnknownKeyName, TypeError, ValueError):
-      mph = 35.0
-    self._a_cruise_max_bp = [0., mph * CV.MPH_TO_MS, 25., 40.]
 
   @staticmethod
   def parse_model(model_msg):
@@ -126,11 +102,6 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
   def update(self, sm):
     LongitudinalPlannerSP.update(self, sm)
 
-    if self._param_frame % int(PARAMS_UPDATE_PERIOD / self.dt) == 0:
-      self._read_e2e_bias_param()
-      self._read_snappy_launch_param()
-    self._param_frame += 1
-
     if len(sm['carControl'].orientationNED) == 3:
       accel_coast = get_coast_accel(sm['carControl'].orientationNED[1])
     else:
@@ -152,7 +123,7 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     # No change cost when user is controlling the speed, or when standstill
     prev_accel_constraint = not (reset_state or sm['carState'].standstill)
 
-    accel_clip = [ACCEL_MIN, get_max_accel(v_ego, self._a_cruise_max_bp)]
+    accel_clip = [ACCEL_MIN, get_max_accel(v_ego)]
     steer_angle_without_offset = sm['carState'].steeringAngleDeg - sm['liveParameters'].angleOffsetDeg
     accel_clip = limit_accel_in_turns(v_ego, steer_angle_without_offset, accel_clip, self.CP)
 
@@ -202,8 +173,8 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     output_a_target_e2e = sm['modelV2'].action.desiredAcceleration
     output_should_stop_e2e = sm['modelV2'].action.shouldStop
 
-    bias_scale = np.clip((output_a_target_e2e + 2.0 * self._e2e_bias) / 0.3, 0.0, 1.0)
-    output_a_target_e2e += self._e2e_bias * bias_scale
+    bias_scale = np.clip((output_a_target_e2e + 2.0 * E2E_SPEED_BIAS) / 0.3, 0.0, 1.0)
+    output_a_target_e2e += E2E_SPEED_BIAS * bias_scale
 
     if self.is_e2e(sm):
       output_a_target = min(output_a_target_e2e, output_a_target_mpc)
