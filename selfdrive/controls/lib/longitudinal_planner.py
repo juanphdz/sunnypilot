@@ -17,12 +17,15 @@ from openpilot.common.swaglog import cloudlog
 
 from openpilot.sunnypilot.selfdrive.controls.lib.longitudinal_planner import LongitudinalPlannerSP
 
-# snappy (1.5 = car's hard ACCEL_MAX ceiling) sustained through the whole launch up to ~35mph (15.65 m/s),
-# rolls off gently after that. plain constants - this device runs prebuilt with no local build system, so
-# a Params-based live-tune here isn't viable: params_keys.h is a compiled C++ header (common/params.cc),
-# and a stale/unrebuilt schema throws UnknownKeyName. learned this the hard way - it crashed plannerd.
-A_CRUISE_MAX_VALS = [1.5, 0.9, 0.7, 0.5]
-A_CRUISE_MAX_BP = [0., 15.65, 25., 40.]
+# 1.5 (car's hard ACCEL_MAX ceiling) genuinely held flat from 0 to ~40mph (17.88 m/s) this time - a
+# 2-point interp only draws a straight line between its two points, so this needs its own breakpoint
+# at 40mph rather than one further out, or it tapers the whole way there instead of holding. Rolls off
+# to the gentler highway pace after that. plain constants - this device runs prebuilt with no local
+# build system, so a Params-based live-tune here isn't viable: params_keys.h is a compiled C++ header
+# (common/params.cc), and a stale/unrebuilt schema throws UnknownKeyName. learned this the hard way -
+# it crashed plannerd.
+A_CRUISE_MAX_VALS = [1.5, 1.5, 0.7, 0.5]
+A_CRUISE_MAX_BP = [0., 17.88, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging too easily/too long past MIN_ALLOW_THROTTLE_SPEED
 # raised from 2.5 - throttle_prob isn't reliable through a full launch either, not just at creep speed,
