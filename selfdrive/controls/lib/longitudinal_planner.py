@@ -32,9 +32,11 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 # nudges the e2e model's own desiredAcceleration up when it's coasting/cruising conservatively -
 # never when it's trying to brake or stop. bias_scale fades to 0 once the model's raw request drops
 # below -2*E2E_SPEED_BIAS (it's clearly braking), and the final min(e2e, mpc) below still lets MPC's
-# own braking assessment override this unconditionally either way. idea + field-tested value (0.13,
-# one week of driving) from a community fork post; only applies while is_e2e(sm) is true.
-E2E_SPEED_BIAS = 0.13  # m/s^2
+# own braking assessment override this unconditionally either way. idea from a community fork post
+# (field-tested there at 0.13); lowered to 0.04 - 0.13 was dominating the model's own small highway
+# cruise corrections instead of just nudging them, causing a push-then-correct pulsing at highway
+# speed. only applies while is_e2e(sm) is true.
+E2E_SPEED_BIAS = 0.04  # m/s^2
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
