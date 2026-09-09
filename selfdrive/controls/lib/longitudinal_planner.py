@@ -47,8 +47,9 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 # push this much higher and it starts also softening moderate braking requests during the slow-down
 # blended window (approaching a stop), fighting the earlier smooth-stop tuning instead of just
 # helping launches. treat ~0.20-0.25 as the practical ceiling; raise in small steps and watch stop
-# approaches (not just launches) for softness if pushed further. only applies while is_e2e(sm) is true.
-E2E_SPEED_BIAS = 0.12  # m/s^2
+# approaches (not just launches) for softness if pushed further. raised 0.12->0.16 - 0-7mph launch
+# still slow enough to get honked at.
+E2E_SPEED_BIAS = 0.16  # m/s^2
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
