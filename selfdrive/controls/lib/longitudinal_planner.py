@@ -37,14 +37,17 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 # below -2*E2E_SPEED_BIAS (it's clearly braking), and the final min(e2e, mpc) below still lets MPC's
 # own braking assessment override this unconditionally either way. idea from a community fork post
 # (field-tested there at 0.13); lowered to 0.04 with DEC off - 0.13 was dominating the model's own
-# small highway cruise corrections, causing a push-then-correct pulsing. raised to 0.08 with DEC on
-# (DEC gates how often is_e2e() is true, so the bias doesn't fight every cycle like it did with DEC
-# off) - fixed the 10mph+ launch window but 0-7mph was still reported sluggish, so raised again to
-# 0.12. still under the 0.13 that caused pulsing, and that pulsing case was DEC-off (is_e2e() true
-# far more often); with DEC on the exposure window is mostly this early blended launch phase, where
-# more bias is exactly what's needed to stop the model's own conservative launch instinct from
-# capping accel below our now-maxed A_CRUISE_MAX_VALS ceiling via the min() below. only applies
-# while is_e2e(sm) is true - watch for highway pulsing returning if pushed further.
+# small highway cruise corrections, causing a push-then-correct pulsing. with DEC on this doesn't
+# recur the same way: dec.py's radar_mode() only requests blended for standstill/launch, a slow-down
+# (approach-to-stop) event, or FCW - a followed lead or steady cruise forces ACC mode outright, so
+# is_e2e() is essentially never true during normal cruise/following anymore. raised 0.04->0.08->0.12
+# chasing 0-7mph sluggishness; each step still under 0.13. no hard safety ceiling here - min(e2e, mpc)
+# below is still capped by A_CRUISE_MAX_VALS/panda regardless of this value, so past some point a
+# bigger bias is just inert during launch. the real limit is the -2*E2E_SPEED_BIAS cutoff above:
+# push this much higher and it starts also softening moderate braking requests during the slow-down
+# blended window (approaching a stop), fighting the earlier smooth-stop tuning instead of just
+# helping launches. treat ~0.20-0.25 as the practical ceiling; raise in small steps and watch stop
+# approaches (not just launches) for softness if pushed further. only applies while is_e2e(sm) is true.
 E2E_SPEED_BIAS = 0.12  # m/s^2
 
 # Lookup table for turns
