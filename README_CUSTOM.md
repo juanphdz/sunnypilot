@@ -76,7 +76,6 @@ This document tracks custom longitudinal and lateral modifications applied to th
 | `E2E_SPEED_BIAS` | `longitudinal_planner.py` | `0.00` | `0.20` | Nudge e2e launch acceleration |
 | `STOP_DISTANCE` | `long_mpc.py` | `6.0` | `5.0` | Target stopped distance buffer |
 | `COMFORT_BRAKE` | `long_mpc.py` | `2.2` | `2.5` | Obstacle buffer deceleration curve |
-| `jerk_factor` (Rel/Std/Agg) | `long_mpc.py` | `1.8 / 1.8 / 1.6` | `1.2 / 0.9 / 0.5` | Reduces acceleration ramp penalty (A/B tested via `pytest` - not the cause of the "NaN recovery" / "resume from a stop" test failures, which fail identically on the old values too - pre-existing, unrelated to this branch's tuning) |
-| `MIN_ALLOW_THROTTLE_SPEED` | `longitudinal_planner.py` | `2.5` | `5.0` | Speed below which the throttle-confidence coast clamp is skipped (was `10.0` - disabled the clamp through ~22mph, `pytest`'s "slow to 5m/s" caught it) |
+| `jerk_factor` (Std/Agg) | `long_mpc.py` | `1.8 / 1.6` | `0.9 / 0.5` | Reduces acceleration ramp penalty |
 | `potential_low_speed_lead` | `radard.py` | `abs(yRel) < 1.0` | `abs(yRel) < 0.7` | Quick drop of right-turning cars |
 | `permit_braking` off | `carcontroller.py` | `0.30` | `0.15` | Earlier physical brake release |

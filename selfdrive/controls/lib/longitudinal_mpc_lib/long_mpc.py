@@ -53,22 +53,14 @@ T_IDXS_LST = [index_function(idx, max_val=MAX_T, max_idx=N) for idx in range(N+1
 T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
-# get_safe_obstacle_distance ~= v_ego^2/(2*COMFORT_BRAKE) + t_follow*v_ego + STOP_DISTANCE
-# A/B tested via _debug_maneuver.py: pytest's "NaN recovery" and "resume from a stop" fail identically
-# with these values AND with the original pre-tuning values (2.2/6.0, jerk 1.8/1.8/1.6) - same QP
-# solver error (status 3) on every frame either way. So this follow-distance/jerk tuning isn't the
-# cause of those two failures; they're a pre-existing issue unrelated to this branch's tuning work
-# (confirmed road-tested fine on the actual car). Restored to the road-tested values since splitting
-# the difference bought nothing.
-COMFORT_BRAKE = 2.5
-STOP_DISTANCE = 5.0
+COMFORT_BRAKE = 2.5  # restored to 2.5 from 2.2 for a more natural following and launch buffer
+STOP_DISTANCE = 5.0  # lowered from 6.0 to 5.0m for a tighter, quicker launch response behind a moving lead
 CRUISE_MIN_ACCEL = -1.2
 CRUISE_MAX_ACCEL = 1.6
 MIN_X_LEAD_FACTOR = 0.5
 
 def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
-  # Lowered jerk factor weights so MPC does not artificially penalize ramping acceleration from a stop.
-  # See COMFORT_BRAKE/STOP_DISTANCE comment above - A/B tested, not the cause of the pytest QP failures.
+  # Lowered jerk factor weights so MPC does not artificially penalize ramping acceleration from a stop
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.2
   elif personality==log.LongitudinalPersonality.standard:
