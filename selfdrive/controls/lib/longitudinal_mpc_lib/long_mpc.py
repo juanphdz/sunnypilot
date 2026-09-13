@@ -53,21 +53,20 @@ T_IDXS_LST = [index_function(idx, max_val=MAX_T, max_idx=N) for idx in range(N+1
 T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
-COMFORT_BRAKE = 2.2  # lowered from 2.5 for earlier, gentler braking margin
-STOP_DISTANCE = 6.0
+COMFORT_BRAKE = 2.5  # restored to 2.5 from 2.2 for a more natural following and launch buffer
+STOP_DISTANCE = 5.0  # lowered from 6.0 to 5.0m for a tighter, quicker launch response behind a moving lead
 CRUISE_MIN_ACCEL = -1.2
 CRUISE_MAX_ACCEL = 1.6
 MIN_X_LEAD_FACTOR = 0.5
 
 def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
-  # pedal smoothness now decoupled from follow distance: same jerk factor floor (1.6) across
-  # all personalities, relaxed/standard kept at the gentler 1.8
+  # Lowered jerk factor weights so MPC does not artificially penalize ramping acceleration from a stop
   if personality==log.LongitudinalPersonality.relaxed:
-    return 1.8
+    return 1.2
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.8
+    return 0.9
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 1.6
+    return 0.5
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 

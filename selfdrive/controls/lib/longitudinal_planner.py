@@ -193,8 +193,16 @@ class LongitudinalPlanner(LongitudinalPlannerSP):
     output_a_target_e2e += E2E_SPEED_BIAS * bias_scale
 
     if self.is_e2e(sm):
-      output_a_target = min(output_a_target_e2e, output_a_target_mpc)
-      self.output_should_stop = output_should_stop_e2e or output_should_stop_mpc
+      # If MPC sees a departing/moving lead and requests positive launch acceleration,
+      # do not let E2E model's conservative shouldStop or low desiredAcceleration stall the launch
+      has_lead = sm['radarState'].leadOne.status
+      lead_moving = has_lead and (sm['radarState'].leadOne.vLead > 0.5 or sm['radarState'].leadOne.vRel > 0.2)
+      if lead_moving and output_a_target_mpc > 0.1:
+        output_a_target = max(output_a_target_e2e, output_a_target_mpc)
+        self.output_should_stop = output_should_stop_mpc
+      else:
+        output_a_target = min(output_a_target_e2e, output_a_target_mpc)
+        self.output_should_stop = output_should_stop_e2e or output_should_stop_mpc
       if output_a_target < output_a_target_mpc:
         self.mpc.source = LongitudinalPlanSource.e2e
     else:

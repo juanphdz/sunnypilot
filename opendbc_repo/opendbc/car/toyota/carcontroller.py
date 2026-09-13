@@ -262,9 +262,9 @@ class CarController(CarControllerBase, GasInterceptorCarController):
         # Along with rate limiting positive jerk above, this greatly improves gas response time
         # Consider the net acceleration request that the PCM should be applying (pitch included)
         net_acceleration_request_min = min(actuators.accel + accel_due_to_pitch, net_acceleration_request)
-        if net_acceleration_request_min < 0.2 or stopping or not CC.longActive:
+        if net_acceleration_request_min < 0.1 or stopping or not CC.longActive:
           self.permit_braking = True
-        elif net_acceleration_request_min > 0.3:
+        elif net_acceleration_request_min > 0.15:
           self.permit_braking = False
 
         pcm_accel_cmd = pcm_accel_cmd if self.CP.carFingerprint in TSS2_CAR else actuators.accel

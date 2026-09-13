@@ -171,6 +171,7 @@ class DynamicExperimentalController:
       smoothing_factor=0.5
     )
     self._has_lead_filtered = False
+    self._lead_v_lead = 0.0
     self._has_slow_down = False
     self._has_slowness = False
     self._has_mpc_fcw = False
@@ -220,6 +221,7 @@ class DynamicExperimentalController:
     self._lead_filter.add_data(float(lead_one.status))
     lead_value = self._lead_filter.get_value() or 0.0
     self._has_lead_filtered = lead_value > WMACConstants.LEAD_PROB
+    self._lead_v_lead = lead_one.vLead if lead_one.status else 0.0
 
     # MPC FCW detection
     fcw_filtered_value = self._mpc_fcw_filter.get_value() or 0.0
@@ -342,8 +344,8 @@ class DynamicExperimentalController:
       self._mode_manager.request_mode('blended', confidence=1.0, emergency=True)
       return
 
-    # If lead detected and not in standstill: always use ACC
-    if self._has_lead_filtered and not (self._standstill_count > 3):
+    # If lead detected and either moving or not in standstill: always use ACC
+    if self._has_lead_filtered and (self._lead_v_lead > 0.5 or not (self._standstill_count > 3)):
       self._mode_manager.request_mode('acc', confidence=1.0)
       return
 

@@ -104,7 +104,8 @@ class Track:
   def potential_low_speed_lead(self, v_ego: float):
     # stop for stuff in front of you and low speed, even without model confirmation
     # Radar points closer than 0.75, are almost always glitches on toyota radars
-    return abs(self.yRel) < 1.0 and (v_ego < V_EGO_STATIONARY) and (0.75 < self.dRel < 25)
+    # tightened lateral window from 1.0 to 0.7 so vehicles turning right clear much faster
+    return abs(self.yRel) < 0.7 and (v_ego < V_EGO_STATIONARY) and (0.75 < self.dRel < 25)
 
   def is_potential_fcw(self, model_prob: float):
     return model_prob > .9
@@ -261,7 +262,9 @@ class RadarD:
       for i in range(2):
         # Asymmetric filter on lead prob to keep lead when uncertain
         lead_prob = leads_v3[i].prob
-        if lead_prob > self.lead_prob_filters[i].x:
+        if lead_prob < 0.2:
+          self.lead_prob_filters[i].x = lead_prob  # fast clear when lead has vacated/turned out of lane
+        elif lead_prob > self.lead_prob_filters[i].x:
           self.lead_prob_filters[i].x = lead_prob
         else:
           self.lead_prob_filters[i].update(lead_prob)
