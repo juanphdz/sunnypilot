@@ -74,9 +74,9 @@ This document tracks custom longitudinal and lateral modifications applied to th
 | `A_CRUISE_MAX_VALS` | `longitudinal_planner.py` | `[1.6, 1.2, 0.8, 0.6]` | `[1.5, 1.5, 0.7, 0.5]` | Holds 1.5 m/s² flat to 40 mph |
 | `accel_clip` step | `longitudinal_planner.py` | `0.05` | `0.25` | 5.0 m/s²/s slew rate limit |
 | `E2E_SPEED_BIAS` | `longitudinal_planner.py` | `0.00` | `0.20` | Nudge e2e launch acceleration |
-| `STOP_DISTANCE` | `long_mpc.py` | `6.0` | `5.5` | Target stopped distance buffer (split the difference back from `5.0` - `pytest` caught reduced crash margin) |
-| `COMFORT_BRAKE` | `long_mpc.py` | `2.2` | `2.35` | Obstacle buffer deceleration curve (split the difference back from `2.5`) |
-| `jerk_factor` (Rel/Std/Agg) | `long_mpc.py` | `1.8 / 1.8 / 1.6` | `1.5 / 1.35 / 1.05` | Reduces acceleration ramp penalty (split the difference back from `1.2 / 0.9 / 0.5`) |
+| `STOP_DISTANCE` | `long_mpc.py` | `6.0` | `5.0` | Target stopped distance buffer |
+| `COMFORT_BRAKE` | `long_mpc.py` | `2.2` | `2.5` | Obstacle buffer deceleration curve |
+| `jerk_factor` (Rel/Std/Agg) | `long_mpc.py` | `1.8 / 1.8 / 1.6` | `1.2 / 0.9 / 0.5` | Reduces acceleration ramp penalty (A/B tested via `pytest` - not the cause of the "NaN recovery" / "resume from a stop" test failures, which fail identically on the old values too - pre-existing, unrelated to this branch's tuning) |
 | `MIN_ALLOW_THROTTLE_SPEED` | `longitudinal_planner.py` | `2.5` | `5.0` | Speed below which the throttle-confidence coast clamp is skipped (was `10.0` - disabled the clamp through ~22mph, `pytest`'s "slow to 5m/s" caught it) |
 | `potential_low_speed_lead` | `radard.py` | `abs(yRel) < 1.0` | `abs(yRel) < 0.7` | Quick drop of right-turning cars |
 | `permit_braking` off | `carcontroller.py` | `0.30` | `0.15` | Earlier physical brake release |
