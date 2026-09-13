@@ -31,10 +31,15 @@ ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging to
 # raised 2.5->10.0 to stop throttle_prob false-positive clamping through a full launch - but that also
 # fully disabled the coast-down clamp for anything under ~22mph (v_ego <= MIN_ALLOW_THROTTLE_SPEED skips
 # it outright), which is a real regression: it's the same clamp that's supposed to slow the car down on
-# low-confidence/uphill scenarios (pytest's "slow to 5m/s ... pitch=+0.1" caught this - car leveled off
-# at ~10 m/s and never reached the required <5.5 m/s). lowered to 5.0 as a middle ground: still covers
-# creep speed (was 2.5 originally) without gutting the clamp through the whole launch range.
-MIN_ALLOW_THROTTLE_SPEED = 5.0
+# low-confidence/uphill scenarios. pytest's "slow to 5m/s ... pitch=+0.1" test decelerates from 20 m/s
+# with cruise still set to 20 the whole time - the instant v_ego drops to MIN_ALLOW_THROTTLE_SPEED the
+# clamp turns off and cruise-seeking immediately pulls speed back up, so this threshold needs real margin
+# below the test's 5.5 m/s check, not just barely under it: 5.0 still put the bounce-back within reach of
+# 5.5 before the test's 30s window ran out. dropped to 1.5 for real margin. this narrows the window where
+# the clamp is bypassed during a launch even further than 2.5 did, on top of ALLOW_THROTTLE_THRESHOLD
+# already being lowered to 0.2 - watch for any renewed low-speed launch hesitation on the road despite that
+# and E2E_SPEED_BIAS=0.20, since neither of those can override this ceiling once it clamps down.
+MIN_ALLOW_THROTTLE_SPEED = 1.5
 
 # nudges the e2e model's own desiredAcceleration up when it's coasting/cruising conservatively -
 # never when it's trying to brake or stop. bias_scale fades to 0 once the model's raw request drops
