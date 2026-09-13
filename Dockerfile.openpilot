@@ -3,9 +3,14 @@ FROM ubuntu:24.04
 ENV PYTHONUNBUFFERED=1
 
 ENV DEBIAN_FRONTEND=noninteractive
+# libgl1-mesa-dri provides llvmpipe (software rasterizer) - needed since there's no GPU passthrough
+# in this container. xvfb + x11vnc let the UI/simulator render to a local virtual display instead of
+# routing GLX over the network to a host X server (e.g. XQuartz), whose indirect GLX doesn't support
+# the OpenGL core profile raylib/GLFW requests - see tools/sim/README.md for the VNC-viewing workflow.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends sudo tzdata locales \
-      libgl1 libglx-mesa0 libegl1 && \
+      libgl1 libglx-mesa0 libegl1 libgl1-mesa-dri \
+      xvfb x11vnc && \
     rm -rf /var/lib/apt/lists/*
 
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
