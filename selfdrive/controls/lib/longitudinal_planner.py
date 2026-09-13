@@ -28,9 +28,13 @@ A_CRUISE_MAX_VALS = [1.5, 1.5, 0.7, 0.5]
 A_CRUISE_MAX_BP = [0., 17.88, 25., 40.]
 CONTROL_N_T_IDX = ModelConstants.T_IDXS[:CONTROL_N]
 ALLOW_THROTTLE_THRESHOLD = 0.2  # lowered from 0.4 - clamp was still engaging too easily/too long past MIN_ALLOW_THROTTLE_SPEED
-# raised from 2.5 - throttle_prob isn't reliable through a full launch either, not just at creep speed,
-# and was clamping accel toward coast (~-0.3 m/s^2) for as long as the model stayed unsure, well past 30mph
-MIN_ALLOW_THROTTLE_SPEED = 10.0
+# raised 2.5->10.0 to stop throttle_prob false-positive clamping through a full launch - but that also
+# fully disabled the coast-down clamp for anything under ~22mph (v_ego <= MIN_ALLOW_THROTTLE_SPEED skips
+# it outright), which is a real regression: it's the same clamp that's supposed to slow the car down on
+# low-confidence/uphill scenarios (pytest's "slow to 5m/s ... pitch=+0.1" caught this - car leveled off
+# at ~10 m/s and never reached the required <5.5 m/s). lowered to 5.0 as a middle ground: still covers
+# creep speed (was 2.5 originally) without gutting the clamp through the whole launch range.
+MIN_ALLOW_THROTTLE_SPEED = 5.0
 
 # nudges the e2e model's own desiredAcceleration up when it's coasting/cruising conservatively -
 # never when it's trying to brake or stop. bias_scale fades to 0 once the model's raw request drops
