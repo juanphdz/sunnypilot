@@ -90,7 +90,10 @@ class SimulatorBridge(ABC):
 
   def print_status(self):
     speed_mph = self.simulator_state.speed * 2.237
-    sys.stdout.write(f"\r[SIM] Ignition: {self.simulator_state.ignition} | Engaged: {self.simulator_state.is_engaged} | Speed: {speed_mph:.1f} mph | (Press 2: Set/Engage, 1: Resume, 3: Cancel, W/S: Gas/Brake)   ")
+    ss = self.simulated_car.sm['selfdriveState']
+    alert_info = f" | Alert: {ss.alertText1}" if (hasattr(ss, 'alertText1') and ss.alertText1) else ""
+    engage_info = f" | Ready: {ss.engageable}" if hasattr(ss, 'engageable') else ""
+    sys.stdout.write(f"\r[SIM] Ignition: {self.simulator_state.ignition} | Engaged: {self.simulator_state.is_engaged}{engage_info}{alert_info} | Speed: {speed_mph:.1f} mph | (Press 2: Set/Engage, 1: Resume, 3: Cancel, W/S: Gas/Brake)   ")
     sys.stdout.flush()
 
   @abstractmethod
