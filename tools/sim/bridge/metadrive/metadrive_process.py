@@ -37,6 +37,19 @@ def apply_metadrive_patches(arrive_dest_done=True):
   except Exception:
     pass
 
+  # In offscreen / headless mode, RGBCamera._setup_effect also tries to set_shader on tonemap_quad
+  try:
+    from metadrive.component.sensors.rgb_camera import RGBCamera
+    orig_setup_effect = RGBCamera._setup_effect
+    def safe_setup_effect(self):
+      try:
+        orig_setup_effect(self)
+      except (AttributeError, Exception):
+        pass
+    RGBCamera._setup_effect = safe_setup_effect
+  except Exception:
+    pass
+
   # By default, metadrive won't try to use cuda images unless it's used as a sensor for vehicles, so patch that in
   def add_image_sensor_patched(self, name: str, cls, args):
     if self.global_config["image_on_cuda"]:# and name == self.global_config["vehicle_config"]["image_source"]:

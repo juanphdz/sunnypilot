@@ -6,6 +6,13 @@ from panda3d.core import Texture, GraphicsOutput
 
 class CopyRamRGBCamera(RGBCamera):
   """Camera which copies its content into RAM during the render process, for faster image grabbing."""
+  def _setup_effect(self):
+    # Guard against headless/offscreen tonemap_quad being None
+    try:
+      super()._setup_effect()
+    except (AttributeError, Exception):
+      pass
+
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.cpu_texture = Texture()
