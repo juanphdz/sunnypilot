@@ -119,5 +119,5 @@ class SimulatedSensors:
 
     dat = messaging.new_message('deviceState', valid=True)
     dat.deviceState.started = simulator_state.ignition
-    dat.deviceState.deviceType = log.DeviceState.DeviceType.pc
+    dat.deviceState.deviceType = log.InitData.DeviceType.pc
     self.pm.send('deviceState', dat)
