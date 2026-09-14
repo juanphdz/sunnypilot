@@ -197,7 +197,10 @@ class Soundd(QuietMode):
 
 def main():
   s = Soundd()
-  s.soundd_thread()
+  try:
+    s.soundd_thread()
+  except Exception as e:
+    cloudlog.warning(f"soundd failed to initialize audio: {e}")
 
 
 if __name__ == "__main__":
