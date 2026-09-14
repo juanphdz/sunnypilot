@@ -204,6 +204,9 @@ class WifiManager:
     atexit.register(self.stop)
 
   def _initialize(self):
+    if self._exit or self._router_main is None:
+      return
+
     def worker():
       self._wait_for_wifi_device()
 
@@ -223,6 +226,9 @@ class WifiManager:
     threading.Thread(target=worker, daemon=True).start()
 
   def _init_wifi_state(self, block: bool = True):
+    if self._exit or self._router_main is None:
+      return
+
     def worker():
       if self._wifi_device is None:
         cloudlog.warning("No WiFi device found")

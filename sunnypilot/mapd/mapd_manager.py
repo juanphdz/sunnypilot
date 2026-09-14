@@ -121,9 +121,7 @@ def main_thread():
 
   # Create folder needed for OSM
   try:
-    os.mkdir(Paths.mapd_root())
-  except FileExistsError:
-    pass
+    os.makedirs(Paths.mapd_root(), exist_ok=True)
   except PermissionError:
     cloudlog.exception(f"mapd: failed to make {Paths.mapd_root()}")
 
