@@ -5,6 +5,11 @@ import signal
 import sys
 import time
 import traceback
+from pathlib import Path
+
+BASEDIR = Path(__file__).resolve().parents[2]
+if str(BASEDIR) not in sys.path:
+  sys.path.insert(0, str(BASEDIR))
 
 from cereal import log
 import cereal.messaging as messaging
