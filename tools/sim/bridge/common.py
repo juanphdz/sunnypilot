@@ -1,4 +1,5 @@
 import signal
+import sys
 import threading
 import functools
 import numpy as np
@@ -88,11 +89,9 @@ class SimulatorBridge(ABC):
     return bridge_p
 
   def print_status(self):
-    print(
-    f"""
-State:
-Ignition: {self.simulator_state.ignition} Engaged: {self.simulator_state.is_engaged}
-    """)
+    speed_mph = self.simulator_state.speed * 2.237
+    sys.stdout.write(f"\r[SIM] Ignition: {self.simulator_state.ignition} | Engaged: {self.simulator_state.is_engaged} | Speed: {speed_mph:.1f} mph | (Press 2: Set/Engage, 1: Resume, 3: Cancel, W/S: Gas/Brake)   ")
+    sys.stdout.flush()
 
   @abstractmethod
   def spawn_world(self, q: Queue) -> World:

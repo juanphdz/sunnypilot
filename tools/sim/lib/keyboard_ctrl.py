@@ -61,10 +61,13 @@ def keyboard_poll_thread(q: 'Queue[QueueMessage]'):
   while True:
     c = getch()
     if c == '1':
+      print("\n[KEY] 1: Cruise Resume / Accel")
       q.put(control_cmd_gen("cruise_up"))
     elif c == '2':
+      print("\n[KEY] 2: Cruise Set / Decel (Engage)")
       q.put(control_cmd_gen("cruise_down"))
     elif c == '3':
+      print("\n[KEY] 3: Cruise Cancel")
       q.put(control_cmd_gen("cruise_cancel"))
     elif c == 'w':
       q.put(control_cmd_gen(f"throttle_{1.0}"))
@@ -79,10 +82,13 @@ def keyboard_poll_thread(q: 'Queue[QueueMessage]'):
     elif c == 'x':
       q.put(control_cmd_gen("blinker_right"))
     elif c == 'i':
+      print("\n[KEY] i: Toggle Ignition")
       q.put(control_cmd_gen("ignition"))
     elif c == 'r':
+      print("\n[KEY] r: Reset Simulation")
       q.put(control_cmd_gen("reset"))
     elif c == 'q':
+      print("\n[KEY] q: Quit")
       q.put(control_cmd_gen("quit"))
       break
     else:
