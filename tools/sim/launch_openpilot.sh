@@ -14,6 +14,18 @@ fi
 
 mkdir -p ~/.comma/media/0/osm
 
+export DISPLAY="${DISPLAY:-:99}"
+export LIBGL_ALWAYS_SOFTWARE=1
+
+if ! pgrep -f "Xvfb :99" > /dev/null; then
+  Xvfb :99 -screen 0 1920x1080x24 &
+  sleep 1
+fi
+
+if ! pgrep -f "x11vnc.*:99" > /dev/null; then
+  x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -quiet &
+fi
+
 python3 -c "from openpilot.selfdrive.test.helpers import set_params_enabled; set_params_enabled()"
 
 SCRIPT_DIR=$(dirname "$0")
