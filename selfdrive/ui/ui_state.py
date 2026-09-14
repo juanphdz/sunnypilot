@@ -1,3 +1,4 @@
+import os
 import pyray as rl
 import numpy as np
 import time
