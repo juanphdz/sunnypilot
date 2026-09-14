@@ -148,16 +148,16 @@ def manager_thread() -> None:
   while True:
     sm.update(1000)
 
-    started = sm['deviceState'].started
+    ignition = any(ps.ignitionLine or ps.ignitionCan for ps in sm['pandaStates'] if ps.pandaType != log.PandaState.PandaType.unknown)
+    if ignition and not ignition_prev:
+      params.clear_all(ParamKeyFlag.CLEAR_ON_IGNITION_ON)
+
+    started = sm['deviceState'].started or (os.getenv("SIMULATION") == "1" and ignition)
 
     if started and not started_prev:
       params.clear_all(ParamKeyFlag.CLEAR_ON_ONROAD_TRANSITION)
     elif not started and started_prev:
       params.clear_all(ParamKeyFlag.CLEAR_ON_OFFROAD_TRANSITION)
-
-    ignition = any(ps.ignitionLine or ps.ignitionCan for ps in sm['pandaStates'] if ps.pandaType != log.PandaState.PandaType.unknown)
-    if ignition and not ignition_prev:
-      params.clear_all(ParamKeyFlag.CLEAR_ON_IGNITION_ON)
 
     # update onroad params, which drives pandad's safety setter thread
     if started != started_prev:

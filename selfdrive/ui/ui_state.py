@@ -158,7 +158,8 @@ class UIState(UIStateSP):
       self.light_sensor = -1
 
     # Update started state
-    self.started = self.sm["deviceState"].started and self.ignition
+    device_started = self.sm["deviceState"].started or (os.getenv("SIMULATION") == "1")
+    self.started = device_started and self.ignition
 
     # Update body state
     if self.CP is not None and self.is_body != self.CP.notCar:
