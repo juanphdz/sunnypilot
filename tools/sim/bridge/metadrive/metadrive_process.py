@@ -24,6 +24,19 @@ metadrive_simulation_state = namedtuple("metadrive_simulation_state", ["running"
 metadrive_vehicle_state = namedtuple("metadrive_vehicle_state", ["velocity", "position", "bearing", "steering_angle"])
 
 def apply_metadrive_patches(arrive_dest_done=True):
+  # In offscreen / headless mode without a physical display window, simplepbr fails to create tonemap_quad
+  try:
+    import metadrive.third_party.simplepbr as simplepbr
+    orig_setup_tonemapping = simplepbr.Pipeline._setup_tonemapping
+    def safe_setup_tonemapping(self):
+      try:
+        orig_setup_tonemapping(self)
+      except (AttributeError, Exception):
+        pass
+    simplepbr.Pipeline._setup_tonemapping = safe_setup_tonemapping
+  except Exception:
+    pass
+
   # By default, metadrive won't try to use cuda images unless it's used as a sensor for vehicles, so patch that in
   def add_image_sensor_patched(self, name: str, cls, args):
     if self.global_config["image_on_cuda"]:# and name == self.global_config["vehicle_config"]["image_source"]:
