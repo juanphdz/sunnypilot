@@ -71,7 +71,7 @@ This document tracks custom longitudinal and lateral modifications applied to th
 
 | Parameter | File | Previous / Stock | Current Setting | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
-| `A_CRUISE_MAX_VALS` | `longitudinal_planner.py` | `[1.6, 1.2, 0.8, 0.6]` | `[1.5, 1.5, 0.7, 0.5]` | Holds 1.5 m/s² flat to 40 mph |
+| `A_CRUISE_MAX_VALS` | `longitudinal_planner.py` | `[1.6, 1.2, 0.8, 0.6]` | `[1.5, 1.5, 1.0, 0.7, 0.5]` | Holds 1.5 m/s² flat to 20 mph, tapers to 1.0 by 40 mph (was flat to 40 - felt too punchy 20-40) |
 | `accel_clip` step | `longitudinal_planner.py` | `0.05` | `0.25` | 5.0 m/s²/s slew rate limit |
 | `E2E_SPEED_BIAS` | `longitudinal_planner.py` | `0.00` | `0.23` | Nudge e2e launch acceleration |
 | `STOP_DISTANCE` | `long_mpc.py` | `6.0` | `5.0` | Target stopped distance buffer |
