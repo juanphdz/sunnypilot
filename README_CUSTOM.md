@@ -73,9 +73,10 @@ This document tracks custom longitudinal and lateral modifications applied to th
 | :--- | :--- | :--- | :--- | :--- |
 | `A_CRUISE_MAX_VALS` | `longitudinal_planner.py` | `[1.6, 1.2, 0.8, 0.6]` | `[1.5, 1.5, 0.7, 0.5]` | Holds 1.5 m/s² flat to 40 mph |
 | `accel_clip` step | `longitudinal_planner.py` | `0.05` | `0.25` | 5.0 m/s²/s slew rate limit |
-| `E2E_SPEED_BIAS` | `longitudinal_planner.py` | `0.00` | `0.20` | Nudge e2e launch acceleration |
+| `E2E_SPEED_BIAS` | `longitudinal_planner.py` | `0.00` | `0.23` | Nudge e2e launch acceleration |
 | `STOP_DISTANCE` | `long_mpc.py` | `6.0` | `5.0` | Target stopped distance buffer |
 | `COMFORT_BRAKE` | `long_mpc.py` | `2.2` | `2.5` | Obstacle buffer deceleration curve |
-| `jerk_factor` (Std/Agg) | `long_mpc.py` | `1.8 / 1.6` | `0.9 / 0.5` | Reduces acceleration ramp penalty |
+| `jerk_factor` (Rel/Std/Agg) | `long_mpc.py` | `1.8 / 1.8 / 1.6` | `1.2 / 0.9 / 0.9` | Reduces acceleration ramp penalty (aggressive matched to standard - was too jerky) |
+| `T_FOLLOW` (Rel/Std/Agg) | `long_mpc.py` | `1.75 / 1.45 / 1.25` | `1.75 / 1.45 / 1.45` | Follow time gap (aggressive matched to standard - was following too close) |
 | `potential_low_speed_lead` | `radard.py` | `abs(yRel) < 1.0` | `abs(yRel) < 0.7` | Quick drop of right-turning cars |
 | `permit_braking` off | `carcontroller.py` | `0.30` | `0.15` | Earlier physical brake release |

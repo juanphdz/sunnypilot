@@ -60,24 +60,28 @@ CRUISE_MAX_ACCEL = 1.6
 MIN_X_LEAD_FACTOR = 0.5
 
 def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
-  # Lowered jerk factor weights so MPC does not artificially penalize ramping acceleration from a stop
+  # Lowered jerk factor weights so MPC does not artificially penalize ramping acceleration from a stop.
+  # aggressive matched to standard's value - the stock 0.5 combined with T_FOLLOW below made aggressive
+  # mode swing accel/decel too hard on top of following too close, not just "confident", genuinely
+  # unpleasant to ride in. mimicking standard's logic rather than tuning a separate aggressive value.
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.2
   elif personality==log.LongitudinalPersonality.standard:
     return 0.9
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 0.5
+    return 0.9
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
+  # aggressive matched to standard's follow distance - see get_jerk_factor comment above
   if personality==log.LongitudinalPersonality.relaxed:
     return 1.75
   elif personality==log.LongitudinalPersonality.standard:
     return 1.45
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 1.25
+    return 1.45
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 

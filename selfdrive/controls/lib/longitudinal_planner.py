@@ -48,9 +48,9 @@ MIN_ALLOW_THROTTLE_SPEED = 10.0
 # blended window (approaching a stop), fighting the earlier smooth-stop tuning instead of just
 # helping launches. treat ~0.20-0.25 as the practical ceiling; raise in small steps and watch stop
 # approaches (not just launches) for softness if pushed further. raised 0.12->0.16 - 0-7mph launch
-# still slow enough to get honked at. 0.16 narrowed it to just 0-3mph, raised again to 0.20 (top of
-# the practical ceiling) - watch stop-approach behavior closely at this level.
-E2E_SPEED_BIAS = 0.20  # m/s^2
+# still slow enough to get honked at. 0.16 narrowed it to just 0-3mph, raised to 0.20 - 0-3mph still
+# had room. raised again to 0.23 - getting close to the ceiling, watch stop-approach softness closely.
+E2E_SPEED_BIAS = 0.23  # m/s^2
 
 # Lookup table for turns
 _A_TOTAL_MAX_V = [1.7, 3.2]
